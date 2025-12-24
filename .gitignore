@@ -2,3 +2,5 @@
 *.iml
 
 .terraform/
+terraform.tfstate
+.terraform.lock.hcl
