@@ -1,6 +1,7 @@
 # Data source bucket for product catalog
 resource "aws_s3_bucket" "data_source" {
-  bucket = "${local.name_prefix}-data-source"
+  bucket        = "${local.name_prefix}-data-source"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "data_source" {
@@ -21,7 +22,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "data_source" {
 
 # Frontend hosting bucket
 resource "aws_s3_bucket" "frontend" {
-  bucket = "${local.name_prefix}-frontend"
+  bucket        = "${local.name_prefix}-frontend"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_website_configuration" "frontend" {

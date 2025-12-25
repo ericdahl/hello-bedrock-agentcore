@@ -1,5 +1,6 @@
 resource "aws_s3vectors_vector_bucket" "kb" {
   vector_bucket_name = "${local.name_prefix}-vectors"
+  force_destroy      = true
 }
 
 resource "aws_s3vectors_index" "kb" {
