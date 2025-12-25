@@ -25,8 +25,9 @@ resource "aws_bedrockagent_knowledge_base" "product_catalog" {
 }
 
 resource "aws_bedrockagent_data_source" "product_catalog" {
-  knowledge_base_id = aws_bedrockagent_knowledge_base.product_catalog.id
-  name              = "product-catalog-s3"
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.product_catalog.id
+  name                 = "product-catalog-s3"
+  data_deletion_policy = "RETAIN"
 
   data_source_configuration {
     type = "S3"
