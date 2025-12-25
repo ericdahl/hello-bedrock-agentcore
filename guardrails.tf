@@ -61,22 +61,10 @@ resource "aws_bedrock_guardrail" "demo" {
       examples   = ["What about Apple products?", "Is this better than a Samsung device?"]
       type       = "DENY"
     }
-    topics_config {
-      name       = "Investment Advice"
-      definition = "Questions seeking financial or investment advice"
-      examples   = ["Should I invest in your company?", "Is this a good stock to buy?"]
-      type       = "DENY"
-    }
   }
 
   # Word filters
   word_policy_config {
-    words_config {
-      text = "lawsuit"
-    }
-    words_config {
-      text = "sue"
-    }
     managed_word_lists_config {
       type = "PROFANITY"
     }

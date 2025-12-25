@@ -16,6 +16,25 @@ GUARDRAIL_ID = os.environ['GUARDRAIL_ID']
 GUARDRAIL_VERSION = os.environ['GUARDRAIL_VERSION']
 CHAT_MODEL_ARN = os.environ['CHAT_MODEL_ARN']
 
+# Greeting detection patterns
+GREETINGS = {
+    'hello': 'Hello! I can help you learn about our Absurd Gadgets products. What would you like to know?',
+    'hi': 'Hi there! Ask me anything about our wonderfully ridiculous products!',
+    'hey': 'Hey! Ready to explore our absurd product lineup?',
+    'good morning': 'Good morning! How can I help you with our Absurd Gadgets today?',
+    'good afternoon': 'Good afternoon! What would you like to know about our products?',
+    'good evening': 'Good evening! Ready to discover some absurdly amazing gadgets?',
+    'greetings': 'Greetings! I\'m here to help you explore our Absurd Gadgets catalog.',
+}
+
+
+def handle_greeting(message: str) -> str:
+    """Check if message is a greeting and return appropriate response."""
+    normalized = message.lower().strip().rstrip('!.?')
+    if normalized in GREETINGS:
+        return GREETINGS[normalized]
+    return None
+
 
 def lambda_handler(event, context):
     """Main Lambda handler for chat API."""
@@ -28,6 +47,15 @@ def lambda_handler(event, context):
 
         if not user_message:
             return response(400, {'error': 'Message is required'})
+
+        # Handle common greetings
+        greeting_message = handle_greeting(user_message)
+        if greeting_message:
+            return response(200, {
+                'message': greeting_message,
+                'session_id': session_id,
+                'citations': []
+            })
 
         # Retrieve memory context
         memory_context = retrieve_memory(user_id, session_id, user_message)
