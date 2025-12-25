@@ -19,3 +19,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "data_source" {
     }
   }
 }
+
+resource "aws_s3_object" "data_files" {
+  for_each = fileset("${path.module}/data", "**/*.md")
+
+  bucket       = aws_s3_bucket.data_source.id
+  key          = each.value
+  source       = "${path.module}/data/${each.value}"
+  etag         = filemd5("${path.module}/data/${each.value}")
+  content_type = "text/markdown"
+}

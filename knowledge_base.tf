@@ -45,3 +45,21 @@ resource "aws_bedrockagent_data_source" "product_catalog" {
     }
   }
 }
+
+# Trigger ingestion when data files change
+resource "terraform_data" "kb_ingestion_trigger" {
+  triggers_replace = {
+    data_files = sha256(jsonencode([for k, v in aws_s3_object.data_files : v.etag]))
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Triggering Knowledge Base ingestion..."
+      aws bedrock-agent start-ingestion-job \
+        --knowledge-base-id ${aws_bedrockagent_knowledge_base.product_catalog.id} \
+        --data-source-id ${aws_bedrockagent_data_source.product_catalog.data_source_id}
+    EOT
+  }
+
+  depends_on = [aws_s3_object.data_files]
+}
