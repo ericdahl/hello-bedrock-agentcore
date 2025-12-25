@@ -1,7 +1,6 @@
-# Bedrock Knowledge Base Role
-
 data "aws_iam_policy_document" "bedrock_kb_assume_role" {
   statement {
+    sid     = "AllowBedrockServiceAssumeRole"
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
@@ -26,8 +25,8 @@ resource "aws_iam_role" "bedrock_kb" {
 }
 
 data "aws_iam_policy_document" "bedrock_kb_policy" {
-  # S3 Data Source Access
   statement {
+    sid = "S3DataSourceAccess"
     actions = [
       "s3:GetObject",
       "s3:ListBucket"
@@ -38,16 +37,14 @@ data "aws_iam_policy_document" "bedrock_kb_policy" {
     ]
   }
 
-  # Bedrock Foundation Model
   statement {
-    actions = [
-      "bedrock:InvokeModel"
-    ]
+    sid       = "BedrockEmbeddingModelAccess"
+    actions   = ["bedrock:InvokeModel"]
     resources = [local.embedding_model_arn]
   }
 
-  # S3 Vectors Access
   statement {
+    sid = "S3VectorsAccess"
     actions = [
       "s3vectors:Query",
       "s3vectors:QueryVectors",

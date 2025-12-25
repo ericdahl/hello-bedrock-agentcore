@@ -1,7 +1,6 @@
-# Lambda Chat Execution Role
-
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
+    sid     = "AllowLambdaServiceAssumeRole"
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
@@ -16,8 +15,8 @@ resource "aws_iam_role" "lambda_chat" {
 }
 
 data "aws_iam_policy_document" "lambda_chat_policy" {
-  # CloudWatch Logs
   statement {
+    sid = "CloudWatchLogsAccess"
     actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
@@ -26,8 +25,8 @@ data "aws_iam_policy_document" "lambda_chat_policy" {
     resources = ["arn:aws:logs:${local.region}:${local.account_id}:*"]
   }
 
-  # Bedrock Knowledge Base and Models
   statement {
+    sid = "BedrockKnowledgeBaseAndModelsAccess"
     actions = [
       "bedrock:RetrieveAndGenerate",
       "bedrock:Retrieve",
@@ -36,8 +35,8 @@ data "aws_iam_policy_document" "lambda_chat_policy" {
     resources = ["*"]
   }
 
-  # AgentCore Memory
   statement {
+    sid = "AgentCoreMemoryAccess"
     actions = [
       "bedrock-agentcore:CreateEvent",
       "bedrock-agentcore:RetrieveMemoryRecords",
@@ -46,11 +45,9 @@ data "aws_iam_policy_document" "lambda_chat_policy" {
     resources = ["*"]
   }
 
-  # Guardrails
   statement {
-    actions = [
-      "bedrock:ApplyGuardrail"
-    ]
+    sid       = "BedrockGuardrailsAccess"
+    actions   = ["bedrock:ApplyGuardrail"]
     resources = ["*"]
   }
 }
