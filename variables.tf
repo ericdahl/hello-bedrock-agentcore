@@ -13,7 +13,7 @@ variable "embedding_model_id" {
 variable "chat_model_id" {
   description = "Bedrock chat model ID for RAG responses"
   type        = string
-  default     = "anthropic.claude-3-sonnet-20240229-v1:0"
+  default     = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 }
 
 variable "enable_cloudfront" {
