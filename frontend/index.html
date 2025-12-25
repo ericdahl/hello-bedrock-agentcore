@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absurd Gadgets - Customer Support</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <h1>Absurd Gadgets Support</h1>
+            <p>Ask about our wonderfully ridiculous products!</p>
+        </header>
+
+        <div id="chat-messages" class="chat-messages">
+            <div class="message assistant">
+                <div class="message-content">
+                    Welcome to Absurd Gadgets! I can help you with questions about
+                    our products like the Self-Peeling Banana, WiFi-Enabled Toaster
+                    for Pets, Quantum Socks, and more. How can I assist you today?
+                </div>
+            </div>
+        </div>
+
+        <form id="chat-form" class="chat-input-form">
+            <input
+                type="text"
+                id="message-input"
+                placeholder="Ask about our products..."
+                autocomplete="off"
+            >
+            <button type="submit" id="send-button">Send</button>
+        </form>
+
+        <div id="loading" class="loading hidden">
+            <span class="loading-dots">Thinking...</span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
