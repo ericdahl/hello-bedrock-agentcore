@@ -8,4 +8,8 @@ resource "aws_s3vectors_index" "kb" {
   dimension          = 1024
   distance_metric    = "cosine"
   data_type          = "float32"
+
+  metadata_configuration {
+    non_filterable_metadata_keys = ["AMAZON_BEDROCK_TEXT", "AMAZON_BEDROCK_METADATA"]
+  }
 }

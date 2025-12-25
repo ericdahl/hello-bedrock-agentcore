@@ -84,6 +84,24 @@ body {
     border-bottom-left-radius: 4px;
 }
 
+.message-content p {
+    margin: 0 0 8px 0;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.message-content ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.message-content li {
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
 .chat-input-form {
     display: flex;
     padding: 20px;

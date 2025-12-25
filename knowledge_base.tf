@@ -39,8 +39,8 @@ resource "aws_bedrockagent_data_source" "product_catalog" {
     chunking_configuration {
       chunking_strategy = "FIXED_SIZE"
       fixed_size_chunking_configuration {
-        max_tokens         = 300
-        overlap_percentage = 20
+        max_tokens         = 200
+        overlap_percentage = 10
       }
     }
   }

@@ -39,7 +39,7 @@ data "aws_iam_policy_document" "lambda_chat_policy" {
   statement {
     actions = [
       "bedrock-agentcore:CreateEvent",
-      "bedrock-agentcore:RetrieveMemory",
+      "bedrock-agentcore:RetrieveMemoryRecords",
       "bedrock-agentcore:GetMemory"
     ]
     resources = ["*"]
@@ -115,7 +115,8 @@ data "aws_iam_policy_document" "bedrock_kb_policy" {
       "s3vectors:GetVectors",
       "s3vectors:GetVectorBucket",
       "s3vectors:GetIndex",
-      "s3vectors:PutVectorData"
+      "s3vectors:PutVectorData",
+      "s3vectors:PutVectors"
     ]
     resources = [
       "arn:aws:s3vectors:${local.region}:${local.account_id}:bucket/${local.name_prefix}-vectors",

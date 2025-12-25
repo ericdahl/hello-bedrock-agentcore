@@ -30,7 +30,7 @@ def lambda_handler(event, context):
             return response(400, {'error': 'Message is required'})
 
         # Retrieve memory context
-        memory_context = retrieve_memory(user_id, session_id)
+        memory_context = retrieve_memory(user_id, session_id, user_message)
 
         # Query knowledge base with RAG
         kb_response = bedrock_agent_runtime.retrieve_and_generate(
@@ -73,19 +73,24 @@ def lambda_handler(event, context):
         return response(500, {'error': 'Internal server error'})
 
 
-def retrieve_memory(user_id: str, session_id: str) -> str:
+def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
     """Retrieve relevant memory context for the conversation."""
     try:
-        response = agentcore_data.retrieve_memory(
+        # Retrieve session summary memories
+        namespace = f"/summaries/{user_id}/{session_id}"
+        response = agentcore_data.retrieve_memory_records(
             memoryId=MEMORY_ID,
-            actorId=user_id,
-            sessionId=session_id,
+            namespace=namespace,
+            searchCriteria={
+                'searchQuery': query,
+                'topK': 5
+            },
             maxResults=5
         )
 
-        memories = response.get('memories', [])
-        if memories:
-            return '\n'.join([m.get('content', '') for m in memories])
+        records = response.get('memoryRecords', [])
+        if records:
+            return '\n'.join([r.get('content', '') for r in records])
         return ''
     except Exception as e:
         print(f"Memory retrieval error: {e}")
