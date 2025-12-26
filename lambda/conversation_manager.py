@@ -7,13 +7,15 @@ import json
 from tool_handlers import execute_tool
 
 
-def handle_conversation_turn(bedrock_runtime, model_id, user_message, memory_context, tool_config, guardrail_config):
+def handle_conversation_turn(bedrock_runtime, bedrock_agent_runtime, model_id, knowledge_base_id, user_message, memory_context, tool_config, guardrail_config):
     """
     Handle a single conversation turn with tool support.
 
     Args:
         bedrock_runtime: Boto3 bedrock-runtime client
+        bedrock_agent_runtime: Boto3 bedrock-agent-runtime client
         model_id: Model ARN or ID to use
+        knowledge_base_id: Knowledge Base ID for RAG
         user_message: User's message text
         memory_context: Previous conversation context from memory
         tool_config: Tool definitions for converse API
@@ -31,9 +33,40 @@ def handle_conversation_turn(bedrock_runtime, model_id, user_message, memory_con
         "content": [{"text": user_message}]
     })
 
+    # Retrieve relevant information from Knowledge Base
+    kb_context = ""
+    if knowledge_base_id and bedrock_agent_runtime:
+        try:
+            print(f"[Converse] Retrieving from Knowledge Base {knowledge_base_id} for query: {user_message}")
+            kb_response = bedrock_agent_runtime.retrieve(
+                knowledgeBaseId=knowledge_base_id,
+                retrievalQuery={
+                    'text': user_message
+                },
+                retrievalConfiguration={
+                    'vectorSearchConfiguration': {
+                        'numberOfResults': 3
+                    }
+                }
+            )
+            
+            retrieved_results = kb_response.get('retrievalResults', [])
+            print(f"[Converse] Found {len(retrieved_results)} results from Knowledge Base")
+            
+            if retrieved_results:
+                kb_context_parts = []
+                for result in retrieved_results:
+                    text = result.get('content', {}).get('text', '')
+                    location = result.get('location', {}).get('s3Location', {}).get('uri', 'unknown source')
+                    kb_context_parts.append(f"Source: {location}\nContent: {text}")
+                
+                kb_context = "\n\n".join(kb_context_parts)
+                print(f"[Converse] Added KB context length: {len(kb_context)}")
+        except Exception as e:
+            print(f"[Converse] Error retrieving from Knowledge Base: {str(e)}")
+
     # System prompt for the assistant
-    system_messages = [{
-        "text": """You are a helpful customer support agent for Absurd Gadgets.
+    system_prompt_text = """You are a helpful customer support agent for Absurd Gadgets.
 
 When customers ask about product availability, stock levels, or inventory:
 - Use the check_inventory tool to get real-time accurate information
@@ -41,7 +74,8 @@ When customers ask about product availability, stock levels, or inventory:
 - In multi-turn conversations, understand context clues like "what about umbrella?" or "and socks?"
 
 For other questions about products (features, pricing, policies, specifications):
-- Answer based on your knowledge and training
+- Answer based ONLY on the provided Context from Knowledge Base.
+- If the answer is not in the context, say you don't know.
 - Be friendly, concise, and helpful
 
 If you have access to user preferences or conversation context in the system messages:
@@ -49,6 +83,12 @@ If you have access to user preferences or conversation context in the system mes
 - Remember details the user has shared about their preferences
 
 Always provide accurate, helpful responses in a conversational manner."""
+
+    if kb_context:
+        system_prompt_text += f"\n\nContext from Knowledge Base:\n{kb_context}"
+
+    system_messages = [{
+        "text": system_prompt_text
     }]
 
     # Add memory context if available

@@ -68,7 +68,9 @@ def lambda_handler(event, context):
         print(f"[Handler] Processing message with tool available")
         response_data = handle_conversation_turn(
             bedrock_runtime=bedrock_runtime,
+            bedrock_agent_runtime=bedrock_agent_runtime,
             model_id=CHAT_MODEL_ARN,
+            knowledge_base_id=KNOWLEDGE_BASE_ID,
             user_message=user_message,
             memory_context=memory_context,
             tool_config=TOOL_CONFIG,
