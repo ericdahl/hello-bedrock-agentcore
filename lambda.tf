@@ -4,6 +4,11 @@ data "archive_file" "lambda_chat" {
   output_path = "${path.module}/.terraform/lambda_chat.zip"
 }
 
+resource "aws_cloudwatch_log_group" "lambda_chat" {
+  name              = "/aws/lambda/${local.name_prefix}-chat"
+  retention_in_days = 7
+}
+
 resource "aws_lambda_function" "chat" {
   filename         = data.archive_file.lambda_chat.output_path
   function_name    = "${local.name_prefix}-chat"
@@ -24,6 +29,8 @@ resource "aws_lambda_function" "chat" {
       REGION            = local.region
     }
   }
+
+  depends_on = [aws_cloudwatch_log_group.lambda_chat]
 }
 
 resource "aws_lambda_permission" "api_gateway" {
