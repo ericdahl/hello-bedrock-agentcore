@@ -96,12 +96,37 @@ def lambda_handler(event, context):
 
 def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
     """Retrieve relevant memory context for the conversation."""
+    memory_parts = []
+
+    try:
+        # Retrieve user preferences
+        preferences_namespace = f"/preferences/{user_id}"
+        print(f"[Memory] Retrieving preferences from: {preferences_namespace}")
+        pref_response = agentcore_data.retrieve_memory_records(
+            memoryId=MEMORY_ID,
+            namespace=preferences_namespace,
+            searchCriteria={
+                'searchQuery': query,
+                'topK': 3
+            },
+            maxResults=3
+        )
+
+        pref_records = pref_response.get('memoryRecords', [])
+        if pref_records:
+            print(f"[Memory] Found {len(pref_records)} preference records")
+            preferences = '\n'.join([r.get('content', '') for r in pref_records])
+            memory_parts.append(f"User Preferences:\n{preferences}")
+    except Exception as e:
+        print(f"Preference retrieval error: {e}")
+
     try:
         # Retrieve session summary memories
-        namespace = f"/summaries/{user_id}/{session_id}"
-        response = agentcore_data.retrieve_memory_records(
+        summary_namespace = f"/summaries/{user_id}/{session_id}"
+        print(f"[Memory] Retrieving summaries from: {summary_namespace}")
+        summary_response = agentcore_data.retrieve_memory_records(
             memoryId=MEMORY_ID,
-            namespace=namespace,
+            namespace=summary_namespace,
             searchCriteria={
                 'searchQuery': query,
                 'topK': 5
@@ -109,13 +134,15 @@ def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
             maxResults=5
         )
 
-        records = response.get('memoryRecords', [])
-        if records:
-            return '\n'.join([r.get('content', '') for r in records])
-        return ''
+        summary_records = summary_response.get('memoryRecords', [])
+        if summary_records:
+            print(f"[Memory] Found {len(summary_records)} summary records")
+            summaries = '\n'.join([r.get('content', '') for r in summary_records])
+            memory_parts.append(f"Conversation Context:\n{summaries}")
     except Exception as e:
-        print(f"Memory retrieval error: {e}")
-        return ''
+        print(f"Summary retrieval error: {e}")
+
+    return '\n\n'.join(memory_parts) if memory_parts else ''
 
 
 def store_conversation(user_id: str, session_id: str, user_msg: str, assistant_msg: str):

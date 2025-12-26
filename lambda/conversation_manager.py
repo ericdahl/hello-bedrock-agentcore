@@ -44,6 +44,10 @@ For other questions about products (features, pricing, policies, specifications)
 - Answer based on your knowledge and training
 - Be friendly, concise, and helpful
 
+If you have access to user preferences or conversation context in the system messages:
+- Use that information to provide personalized responses
+- Remember details the user has shared about their preferences
+
 Always provide accurate, helpful responses in a conversational manner."""
     }]
 
