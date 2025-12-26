@@ -98,6 +98,9 @@ def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
     """Retrieve relevant memory context for the conversation."""
     memory_parts = []
 
+    print(f"[Memory] === RETRIEVE MEMORY START ===")
+    print(f"[Memory] user_id: {user_id}, session_id: {session_id}, query: {query}")
+
     try:
         # Retrieve user preferences
         preferences_namespace = f"/preferences/{user_id}"
@@ -112,13 +115,21 @@ def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
             maxResults=3
         )
 
+        print(f"[Memory] Preferences API response: {pref_response}")
         pref_records = pref_response.get('memoryRecords', [])
+        print(f"[Memory] Preference records count: {len(pref_records)}")
         if pref_records:
-            print(f"[Memory] Found {len(pref_records)} preference records")
+            print(f"[Memory] ✅ Found {len(pref_records)} preference records")
+            for i, record in enumerate(pref_records):
+                print(f"[Memory] Pref record {i+1}: {record}")
             preferences = '\n'.join([r.get('content', '') for r in pref_records])
             memory_parts.append(f"User Preferences:\n{preferences}")
+        else:
+            print(f"[Memory] ⚠️ No preference records found")
     except Exception as e:
-        print(f"Preference retrieval error: {e}")
+        print(f"[Memory] ❌ Preference retrieval error: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"[Memory] Traceback: {traceback.format_exc()}")
 
     try:
         # Retrieve session summary memories
@@ -134,42 +145,69 @@ def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
             maxResults=5
         )
 
+        print(f"[Memory] Summaries API response: {summary_response}")
         summary_records = summary_response.get('memoryRecords', [])
+        print(f"[Memory] Summary records count: {len(summary_records)}")
         if summary_records:
-            print(f"[Memory] Found {len(summary_records)} summary records")
+            print(f"[Memory] ✅ Found {len(summary_records)} summary records")
+            for i, record in enumerate(summary_records):
+                print(f"[Memory] Summary record {i+1}: {record}")
             summaries = '\n'.join([r.get('content', '') for r in summary_records])
             memory_parts.append(f"Conversation Context:\n{summaries}")
+        else:
+            print(f"[Memory] ⚠️ No summary records found")
     except Exception as e:
-        print(f"Summary retrieval error: {e}")
+        print(f"[Memory] ❌ Summary retrieval error: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"[Memory] Traceback: {traceback.format_exc()}")
 
-    return '\n\n'.join(memory_parts) if memory_parts else ''
+    final_context = '\n\n'.join(memory_parts) if memory_parts else ''
+    print(f"[Memory] Final memory context length: {len(final_context)} chars")
+    print(f"[Memory] Final memory context: {final_context[:500]}...")
+    print(f"[Memory] === RETRIEVE MEMORY END ===")
+    return final_context
 
 
 def store_conversation(user_id: str, session_id: str, user_msg: str, assistant_msg: str):
     """Store conversation turn in AgentCore Memory."""
+    print(f"[Memory] === STORE CONVERSATION START ===")
+    print(f"[Memory] user_id: {user_id}, session_id: {session_id}")
+    print(f"[Memory] user_msg: {user_msg[:100]}...")
+    print(f"[Memory] assistant_msg: {assistant_msg[:100]}...")
+
     try:
-        agentcore_data.create_event(
+        event_payload = [
+            {
+                'conversational': {
+                    'content': {'text': user_msg},
+                    'role': 'USER'
+                }
+            },
+            {
+                'conversational': {
+                    'content': {'text': assistant_msg},
+                    'role': 'ASSISTANT'
+                }
+            }
+        ]
+        print(f"[Memory] Event payload: {event_payload}")
+        print(f"[Memory] Calling create_event with memoryId: {MEMORY_ID}")
+
+        create_response = agentcore_data.create_event(
             memoryId=MEMORY_ID,
             actorId=user_id,
             sessionId=session_id,
             eventTimestamp=datetime.now().isoformat(),
-            payload=[
-                {
-                    'conversational': {
-                        'content': {'text': user_msg},
-                        'role': 'USER'
-                    }
-                },
-                {
-                    'conversational': {
-                        'content': {'text': assistant_msg},
-                        'role': 'ASSISTANT'
-                    }
-                }
-            ]
+            payload=event_payload
         )
+        print(f"[Memory] ✅ Event created successfully")
+        print(f"[Memory] create_event response: {create_response}")
     except Exception as e:
-        print(f"Memory storage error: {e}")
+        print(f"[Memory] ❌ Memory storage error: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"[Memory] Traceback: {traceback.format_exc()}")
+
+    print(f"[Memory] === STORE CONVERSATION END ===")
 
 
 def extract_citations(kb_response: dict) -> list:
