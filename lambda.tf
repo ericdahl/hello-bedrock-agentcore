@@ -11,7 +11,7 @@ resource "aws_lambda_function" "chat" {
   handler          = "chat_handler.lambda_handler"
   source_code_hash = data.archive_file.lambda_chat.output_base64sha256
   runtime          = "python3.12"
-  timeout          = 30
+  timeout          = 45
   memory_size      = 256
 
   environment {
