@@ -2,7 +2,7 @@
     'use strict';
 
     // Configuration
-    const API_ENDPOINT = 'https://9bfzy6rl4h.execute-api.us-east-1.amazonaws.com/dev/chat';
+    const API_ENDPOINT = window.API_CONFIG ? window.API_CONFIG.API_ENDPOINT : 'https://9bfzy6rl4h.execute-api.us-east-1.amazonaws.com/dev/chat';
 
     // State
     let sessionId = localStorage.getItem('sessionId') || generateUUID();
