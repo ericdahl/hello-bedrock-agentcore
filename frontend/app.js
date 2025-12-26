@@ -67,55 +67,16 @@
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = formatMarkdown(content);
+        
+        // Use marked to parse markdown and DOMPurify to sanitize HTML
+        const rawHtml = marked.parse(content);
+        contentDiv.innerHTML = DOMPurify.sanitize(rawHtml);
 
         messageDiv.appendChild(contentDiv);
         chatMessages.appendChild(messageDiv);
 
         // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function formatMarkdown(text) {
-        // Escape HTML to prevent XSS
-        const escapeHtml = (str) => {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        };
-
-        // Split into lines and process
-        const lines = text.split('\n');
-        let html = '';
-        let inList = false;
-
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i];
-            const trimmed = line.trim();
-
-            // Handle bullet points
-            if (trimmed.startsWith('- ')) {
-                if (!inList) {
-                    html += '<ul>';
-                    inList = true;
-                }
-                html += '<li>' + escapeHtml(trimmed.substring(2)) + '</li>';
-            } else {
-                if (inList) {
-                    html += '</ul>';
-                    inList = false;
-                }
-                if (trimmed) {
-                    html += '<p>' + escapeHtml(trimmed) + '</p>';
-                }
-            }
-        }
-
-        if (inList) {
-            html += '</ul>';
-        }
-
-        return html;
     }
 
     function setLoading(isLoading) {
