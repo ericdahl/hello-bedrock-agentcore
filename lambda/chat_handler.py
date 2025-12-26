@@ -40,17 +40,6 @@ def handle_greeting(message: str) -> str:
     return None
 
 
-def is_inventory_question(message: str) -> bool:
-    """Detect if question is about stock/inventory."""
-    inventory_keywords = [
-        'stock', 'available', 'inventory', 'in stock',
-        'how many', 'do you have', 'quantity', 'availability',
-        'out of stock', 'restock', 'available for purchase'
-    ]
-    message_lower = message.lower()
-    return any(keyword in message_lower for keyword in inventory_keywords)
-
-
 def lambda_handler(event, context):
     """Main Lambda handler for chat API."""
     try:
@@ -75,69 +64,30 @@ def lambda_handler(event, context):
         # Retrieve memory context
         memory_context = retrieve_memory(user_id, session_id, user_message)
 
-        # Route based on question type
-        if is_inventory_question(user_message):
-            print(f"[Router] Detected inventory question, using tool calling")
-            # Use converse API with inventory tool
-            response_data = handle_conversation_turn(
-                bedrock_runtime=bedrock_runtime,
-                model_id=CHAT_MODEL_ARN,
-                user_message=user_message,
-                memory_context=memory_context,
-                tool_config=TOOL_CONFIG,
-                guardrail_config={
-                    'guardrailIdentifier': GUARDRAIL_ID,
-                    'guardrailVersion': GUARDRAIL_VERSION
-                }
-            )
-            assistant_message = response_data['message']
-            tool_calls = response_data.get('tool_calls', [])
+        # Always use converse API with tool - let Claude decide when to use it
+        print(f"[Handler] Processing message with tool available")
+        response_data = handle_conversation_turn(
+            bedrock_runtime=bedrock_runtime,
+            model_id=CHAT_MODEL_ARN,
+            user_message=user_message,
+            memory_context=memory_context,
+            tool_config=TOOL_CONFIG,
+            guardrail_config={
+                'guardrailIdentifier': GUARDRAIL_ID,
+                'guardrailVersion': GUARDRAIL_VERSION
+            }
+        )
+        assistant_message = response_data['message']
+        tool_calls = response_data.get('tool_calls', [])
 
-            # Store conversation in memory
-            store_conversation(user_id, session_id, user_message, assistant_message)
+        # Store conversation in memory
+        store_conversation(user_id, session_id, user_message, assistant_message)
 
-            return response(200, {
-                'message': assistant_message,
-                'session_id': session_id,
-                'tool_used': tool_calls[0]['name'] if tool_calls else None
-            })
-        else:
-            print(f"[Router] Using Knowledge Base for product information")
-            # Use existing KB retrieve_and_generate for product details
-            kb_response = bedrock_agent_runtime.retrieve_and_generate(
-                input={'text': user_message},
-                retrieveAndGenerateConfiguration={
-                    'type': 'KNOWLEDGE_BASE',
-                    'knowledgeBaseConfiguration': {
-                        'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                        'modelArn': CHAT_MODEL_ARN,
-                        'generationConfiguration': {
-                            'guardrailConfiguration': {
-                                'guardrailId': GUARDRAIL_ID,
-                                'guardrailVersion': GUARDRAIL_VERSION
-                            },
-                            'inferenceConfig': {
-                                'textInferenceConfig': {
-                                    'maxTokens': 1024,
-                                    'temperature': 0.7
-                                }
-                            }
-                        }
-                    }
-                }
-            )
-
-            assistant_message = kb_response['output']['text']
-            citations = extract_citations(kb_response)
-
-            # Store conversation in memory
-            store_conversation(user_id, session_id, user_message, assistant_message)
-
-            return response(200, {
-                'message': assistant_message,
-                'session_id': session_id,
-                'citations': citations
-            })
+        return response(200, {
+            'message': assistant_message,
+            'session_id': session_id,
+            'tool_used': tool_calls[0]['name'] if tool_calls else None
+        })
 
     except Exception as e:
         print(f"Error: {str(e)}")
