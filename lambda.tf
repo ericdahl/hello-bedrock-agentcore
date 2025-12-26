@@ -15,7 +15,7 @@ resource "aws_lambda_function" "chat" {
   role             = aws_iam_role.lambda_chat.arn
   handler          = "chat_handler.lambda_handler"
   source_code_hash = data.archive_file.lambda_chat.output_base64sha256
-  runtime          = "python3.12"
+  runtime          = "python3.14"
   timeout          = 45
   memory_size      = 256
 
