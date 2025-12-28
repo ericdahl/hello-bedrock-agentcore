@@ -58,6 +58,10 @@ Try these example queries:
 - Try profanity (word filtering)
 - Include credit card numbers (PII blocking)
 
+**Inspect AgentCore Memory:**
+- Open the UI and click "Show memory"
+- Or call `GET /memory?user_id=web-user&session_id=<id>` on the API Gateway base URL
+
 ## Infrastructure
 
 All infrastructure is defined in Terraform:

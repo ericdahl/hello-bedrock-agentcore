@@ -43,6 +43,11 @@ def handle_greeting(message: str) -> str:
 def lambda_handler(event, context):
     """Main Lambda handler for chat API."""
     try:
+        path = event.get('path', '')
+        http_method = event.get('httpMethod', '')
+        if path.endswith('/memory') and http_method == 'GET':
+            return handle_memory_request(event)
+
         # Parse request
         body = json.loads(event.get('body', '{}'))
         user_message = body.get('message', '')
@@ -94,6 +99,54 @@ def lambda_handler(event, context):
     except Exception as e:
         print(f"Error: {str(e)}")
         return response(500, {'error': 'Internal server error'})
+
+
+def handle_memory_request(event) -> dict:
+    """Return raw memory records for demo visibility."""
+    params = event.get('queryStringParameters') or {}
+    user_id = params.get('user_id', 'anonymous')
+    session_id = params.get('session_id', '')
+    query = params.get('query', '')
+    max_results = min(int(params.get('max_results', '10')), 25)
+
+    errors = []
+
+    def fetch_namespace(namespace: str) -> list:
+        try:
+            params = {
+                'memoryId': MEMORY_ID,
+                'namespace': namespace,
+                'maxResults': max_results
+            }
+            # Only add searchCriteria if query is not empty
+            if query:
+                params['searchCriteria'] = {
+                    'searchQuery': query,
+                    'topK': max_results
+                }
+            response = agentcore_data.retrieve_memory_records(**params)
+            return response.get('memoryRecords', [])
+        except Exception as e:
+            errors.append(f"{namespace}: {type(e).__name__}: {str(e)}")
+            return []
+
+    preferences_namespace = f"/preferences/{user_id}"
+    summaries_namespace = f"/summaries/{user_id}/{session_id}" if session_id else ""
+
+    response_body = {
+        'user_id': user_id,
+        'session_id': session_id,
+        'query': query,
+        'memory': {
+            'preferences': fetch_namespace(preferences_namespace),
+            'summaries': fetch_namespace(summaries_namespace) if summaries_namespace else []
+        }
+    }
+
+    if errors:
+        response_body['errors'] = errors
+
+    return response(200, response_body)
 
 
 def retrieve_memory(user_id: str, session_id: str, query: str) -> str:
@@ -234,7 +287,7 @@ def response(status_code: int, body: dict) -> dict:
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS'
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
         },
         'body': json.dumps(body)
     }

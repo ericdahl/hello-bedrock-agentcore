@@ -3,6 +3,7 @@
 
     // Configuration
     const API_ENDPOINT = window.API_CONFIG ? window.API_CONFIG.API_ENDPOINT : 'https://9bfzy6rl4h.execute-api.us-east-1.amazonaws.com/dev/chat';
+    const MEMORY_ENDPOINT = API_ENDPOINT.endsWith('/chat') ? API_ENDPOINT.replace(/\/chat$/, '/memory') : `${API_ENDPOINT}/memory`;
 
     // State
     let sessionId = localStorage.getItem('sessionId') || generateUUID();
@@ -14,9 +15,14 @@
     const chatMessages = document.getElementById('chat-messages');
     const sendButton = document.getElementById('send-button');
     const loading = document.getElementById('loading');
+    const memoryToggle = document.getElementById('memory-toggle');
+    const memoryRefresh = document.getElementById('memory-refresh');
+    const memoryOutput = document.getElementById('memory-output');
 
     // Event Listeners
     chatForm.addEventListener('submit', handleSubmit);
+    memoryToggle.addEventListener('click', toggleMemoryPanel);
+    memoryRefresh.addEventListener('click', refreshMemoryPanel);
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -50,6 +56,9 @@
                 addMessage(data.message, 'assistant');
                 sessionId = data.session_id;
                 localStorage.setItem('sessionId', sessionId);
+                if (!memoryOutput.classList.contains('hidden')) {
+                    refreshMemoryPanel();
+                }
             } else {
                 addMessage('Sorry, something went wrong. Please try again.', 'assistant');
             }
@@ -58,6 +67,34 @@
             addMessage('Unable to connect. Please check your connection.', 'assistant');
         } finally {
             setLoading(false);
+        }
+    }
+
+    function toggleMemoryPanel() {
+        const isHidden = memoryOutput.classList.toggle('hidden');
+        memoryRefresh.classList.toggle('hidden', isHidden);
+        memoryToggle.textContent = isHidden ? 'Show memory' : 'Hide memory';
+        if (!isHidden) {
+            refreshMemoryPanel();
+        }
+    }
+
+    async function refreshMemoryPanel() {
+        memoryOutput.textContent = 'Loading memory...';
+        try {
+            const url = new URL(MEMORY_ENDPOINT);
+            url.searchParams.set('user_id', 'web-user');
+            url.searchParams.set('session_id', sessionId);
+            const response = await fetch(url.toString(), { method: 'GET' });
+            const data = await response.json();
+            if (!response.ok) {
+                memoryOutput.textContent = 'Unable to load memory.';
+                return;
+            }
+            memoryOutput.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            console.error('Error fetching memory:', error);
+            memoryOutput.textContent = 'Unable to load memory.';
         }
     }
 

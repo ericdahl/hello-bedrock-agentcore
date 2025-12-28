@@ -12,6 +12,10 @@
             <h1>Absurd Gadgets Support</h1>
             <p>Ask about our wonderfully ridiculous products!</p>
         </header>
+        <div class="memory-toolbar">
+            <button type="button" id="memory-toggle">Show memory</button>
+            <button type="button" id="memory-refresh" class="secondary hidden">Refresh</button>
+        </div>
 
         <div id="chat-messages" class="chat-messages">
             <div class="message assistant">
@@ -36,6 +40,8 @@
         <div id="loading" class="loading hidden">
             <span class="loading-dots">Thinking...</span>
         </div>
+
+        <pre id="memory-output" class="memory-output hidden"></pre>
     </div>
 
     <!-- Libraries for Markdown and Sanitization -->
