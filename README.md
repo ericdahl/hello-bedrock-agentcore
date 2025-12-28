@@ -328,8 +328,6 @@ agentcore delete --agent absurd_gadgets_support
 terraform destroy
 ```
 
-Note: You may need to manually empty S3 buckets first if Terraform fails.
-
 ## Troubleshooting
 
 ### Agent deployment fails
