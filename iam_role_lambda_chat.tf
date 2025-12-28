@@ -36,8 +36,9 @@ data "aws_iam_policy_document" "lambda_chat_policy" {
   }
 
   statement {
-    sid = "AgentCoreMemoryAccess"
+    sid = "AgentCoreRuntimeAccess"
     actions = [
+      "bedrock-agentcore:InvokeAgentRuntime",
       "bedrock-agentcore:CreateEvent",
       "bedrock-agentcore:RetrieveMemoryRecords",
       "bedrock-agentcore:GetMemory"

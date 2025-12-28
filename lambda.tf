@@ -13,7 +13,7 @@ resource "aws_lambda_function" "chat" {
   filename         = data.archive_file.lambda_chat.output_path
   function_name    = "${local.name_prefix}-chat"
   role             = aws_iam_role.lambda_chat.arn
-  handler          = "chat_handler.lambda_handler"
+  handler          = "agentcore_proxy.lambda_handler"
   source_code_hash = data.archive_file.lambda_chat.output_base64sha256
   runtime          = "python3.14"
   timeout          = 45
@@ -21,12 +21,7 @@ resource "aws_lambda_function" "chat" {
 
   environment {
     variables = {
-      KNOWLEDGE_BASE_ID = aws_bedrockagent_knowledge_base.product_catalog.id
-      MEMORY_ID         = aws_bedrockagentcore_memory.chat.id
-      GUARDRAIL_ID      = aws_bedrock_guardrail.demo.guardrail_id
-      GUARDRAIL_VERSION = aws_bedrock_guardrail_version.demo.version
-      CHAT_MODEL_ARN    = local.chat_model_arn
-      REGION            = local.region
+      RUNTIME_ID = "absurd_gadgets_support-eSb910GTDh"
     }
   }
 

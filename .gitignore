@@ -6,3 +6,10 @@ terraform.tfstate*
 .terraform.tfstate.lock.info
 .terraform.lock.hcl
 *.zip
+
+# Python virtual environments
+agent/venv/
+
+# AgentCore local state (contains environment-specific ARNs, IDs, session data)
+.bedrock_agentcore.yaml
+agent/.bedrock_agentcore/
